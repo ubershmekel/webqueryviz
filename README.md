@@ -1,13 +1,8 @@
-# passwordless-mail-nedb
+# webqueryviz
 
-This is a demo of passwordless you can just download and run. It removes the mongo requirement and if you don't supply a `config.json` file with SMTP credentials you can see the activation link printed out to the server command line. Sessions and users are persisted using NeDB.
+The idea is to make it easy for engineers to analyze data and share insights. The following flows are planned.
 
-It's adapted from https://github.com/florianheinemann/passwordless/tree/master/examples/simple-mail
-
-## Dependencies
-* https://github.com/florianheinemann/passwordless
-* https://github.com/louischatriot/nedb
-* https://github.com/syarul/passwordless-nedb
-* https://github.com/louischatriot/express-nedb-session
-
-
+* Define a database source
+* Define a query that runs on that database, it will be exposed and cached via a web api.
+* Define a vizualization of that query.
+* Further down the line we may want to allow exploring database sources (reflection). And processing of data.

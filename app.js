@@ -11,7 +11,9 @@ var passwordlessNedb = require('passwordless-nedb')
 var nedb = require('nedb');
 var email   = require("emailjs");
 
-var routes = require('./routes/index');
+var routes = require('./services/routes');
+
+var dbFolder = path.join(__dirname, 'db');
 
 var app = express();
 var port = process.env.PORT || 3000;
@@ -46,6 +48,7 @@ try {
     console.log("Failed to load configuration: " + err);
 };
 var smtpServer = null;
+var tokenDeliveryMethod = "console.log";
 if(config.smtp)
     smtpServer = email.server.connect(config.smtp);
 
@@ -53,7 +56,7 @@ if(config.smtp)
 // Setup of Passwordless
 ///////////////////////////////////////////////////////////////////////////////
 var usersDB = new nedb({
-    filename: 'users.nedb',
+    filename: path.join(dbFolder, 'users.nedb'),
     autoload: true
 });
 var usersTokenStore = new passwordlessNedb(usersDB);
@@ -100,7 +103,7 @@ app.use(cookieParser());
 ///////////////////////////////////////////////////////////////////////////////
 var NedbStore = require('nedb-session-store')( expressSession );
 var sessionStore = new NedbStore({
-    filename: './sessions.nedb'
+    filename: path.join(dbFolder, 'sessions.nedb')
 });
 var oneYearMs = 365 * 24 * 60 * 60 * 1000;
 var sessionWare = expressSession({

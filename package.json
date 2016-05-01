@@ -1,12 +1,12 @@
 {
-  "name": "passwordless-mail-nedb",
-  "description": "Working passwordless example using NeDB",
+  "name": "webqueryviz",
+  "description": "Run queries, visualize data",
   "private": false,
   "version": "0.0.7",
   "scripts": {
     "start": "node app.js"
   },
-  "homepage": "https://github.com/ubershmekel/passwordless-mail-nedb",
+  "homepage": "https://github.com/ubershmekel/webqueryviz",
   "dependencies": {
     "body-parser": "~1.13.1",
     "cookie-parser": "~1.3.5",
@@ -18,7 +18,8 @@
     "nedb": "^1.8.0",
     "nedb-session-store": "^1.1.1",
     "passwordless": "*",
-    "passwordless-nedb": "0.0.4"
+    "passwordless-nedb": "0.0.4",
+    "sqlite3": "^3.1.3"
   },
   "license": "MIT"
 }
