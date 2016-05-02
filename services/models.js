@@ -4,7 +4,7 @@ var fs = require('fs');
 var nedb = require('nedb');
 var sqlite3 = require('sqlite3');
 
-var db = new nedb({
+var siteDB = new nedb({
     filename: path.join(__dirname, '..', 'db', 'site.nedb'),
     autoload: true
 });
@@ -20,7 +20,7 @@ var modelTypes = {
 }
 
 function newObj(doc) {
-    db.insert(doc, function(err, newDoc) {
+    siteDB.insert(doc, function(err, newDoc) {
         if(err)
             console.log("Failed inserting doc: " + err);
     });
@@ -40,30 +40,52 @@ function fetchSQLite(filepath, query, callback) {
     });
 }
 
-exports.getQueryData = function(queryDoc, callback) {
+exports.getQueryDoc = function(id, callback  /*function (err, docs)*/) {
+    // docs is an array containing documents Mars, Earth, Jupiter
+    // If no document is found, docs is equal to []
     var docToFind = {
-        _id: queryDoc.sourceId,
-        type: modelTypes.source
+        _id: id,
+        type: modelTypes.query
     };
-    db.find(docToFind, function (err, docs) {
-        if(err) {
-            console.warn("Failed querying sqlite: '" + query + "' with error: " + err);
+    return siteDB.find(docToFind, callback);
+}
+
+exports.getQueryData = function(id, callback) {
+    exports.getQueryDoc(id, function(err, docs){
+        if(err || docs.length == 0) {
+            console.warn("Failed getting query: '" + id + "' with error: " + err);
             callback(err);
+            return;
         }
-        var source = docs[0];
-        if(source.dbType === dbTypes.sqlite) {
-            fetchSQLite(source.filepath, queryDoc.query, callback);
-        } else {
-            var warn = "No db type handler for: '" + source.dbType;
-            console.warn(warn);
-            var err = {message: warn, doc: queryDoc};
-            callback(err);
-        }
+
+        var queryDoc = docs[0];
+        var sourceToFind = {
+            _id: queryDoc.sourceId,
+            type: modelTypes.source
+        };
+
+        siteDB.find(sourceToFind, function (err, docs) {
+            if(err) {
+                console.warn("Failed getting source: '" + queryDoc.sourceId + "' with error: " + err);
+                callback(err);
+                return;
+            }
+            var source = docs[0];
+            if(source.dbType === dbTypes.sqlite) {
+                fetchSQLite(source.filepath, queryDoc.query, callback);
+            } else {
+                var warn = "No db type handler for: '" + source.dbType;
+                console.warn(warn);
+                var err = {message: warn, doc: queryDoc};
+                callback(err);
+                return;
+            }
+        });
     });
 }
 
 exports.getQueryList = function(callback) {
-    db.find({ type: modelTypes.query }, function (err, docs) {
+    siteDB.find({ type: modelTypes.query }, function (err, docs) {
         // docs is an array containing documents Mars, Earth, Jupiter
         // If no document is found, docs is equal to []
         callback(err, docs);
@@ -83,7 +105,7 @@ function main() {
     newObj({
         _id: 'latest_google_pings',
         sourceId: 'google_ping_db',
-        query: 'SELECT date, latency FROM pings ORDER BY date DESC LIMIT 1000',
+        query: 'SELECT date, latency, latency * 2 AS dlat FROM pings ORDER BY date DESC LIMIT 1000',
         type: modelTypes.query
     });
 }

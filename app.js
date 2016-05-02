@@ -55,13 +55,13 @@ if(config.smtp)
 ///////////////////////////////////////////////////////////////////////////////
 // Setup of Passwordless
 ///////////////////////////////////////////////////////////////////////////////
-var usersDB = new nedb({
-    filename: path.join(dbFolder, 'users.nedb'),
+var tokensDB = new nedb({
+    filename: path.join(dbFolder, 'authTokens.nedb'),
     autoload: true
 });
-var usersTokenStore = new passwordlessNedb(usersDB);
+var usersTokenStore = new passwordlessNedb(tokensDB);
 passwordless.init(usersTokenStore, {
-    skipForceSessionSave: true
+    skipForceSessionSave: false
 });
 function deliverToken(tokenToSend, uidToSend, recipient, callback) {
     var activationUrl = host + '?token=' + tokenToSend + '&uid=' + encodeURIComponent(uidToSend);

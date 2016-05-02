@@ -51,28 +51,17 @@ router.post('/sendtoken', requestTokenMiddleware, onTokenSent);
 ///////////////////////////////////////////////////////////////////////////////
 // Data Source and API routes
 ///////////////////////////////////////////////////////////////////////////////
-function setupQueryRoutes(err, docs) {
-    if(err) {
-        console.error("Failed to fetch queries for web APIs");
-        return;
-    }
-    var baseUrl = '/query/';
-    
-    docs.forEach(function(queryDoc) {
-        var url = baseUrl + queryDoc._id;
-        router.get(url, passwordless.restricted(), function(req, res) {
-            models.getQueryData(queryDoc, function(err, rows) {
-                if(err)
-                    res.status(500).send('Something broke!' + err);
-                else
-                    res.json(rows);
-            })
-        });
-    });
-}
-models.getQueryList(setupQueryRoutes);
-
-
+router.get('/query/:id', passwordless.restricted(), function(req, res) {
+    var docId = req.params.id;
+    models.getQueryData(docId, function(err, rows) {
+        if(err)
+            res.status(500).send('500: Something broke!' + err);
+        else if (!rows || rows.length === 0)
+            res.status(404).send('404: Could not find query id: "' + docId + '"');
+        else
+            res.json(rows);
+    })
+});
 
 
 module.exports = router;
