@@ -1,10 +1,11 @@
 var express = require('express');
-var router = express.Router();
-var models = require('./models');
-
 var passwordless = require('passwordless');
-// var passwordless = require('../../../');
 
+var models = require('./models');
+var config = require('./config');
+
+
+var router = express.Router();
 
 ///////////////////////////////////////////////////////////////////////////////
 // Passwordless
@@ -32,18 +33,22 @@ router.get('/logout', passwordless.logout(), function(req, res) {
 /* POST login screen. */
 function onRequestToken(user, delivery, callback) {
     console.log("delivery: " + delivery);
-    // Simply accept every user
-    callback(null, user);
-    // usually you would want something like:
-    // User.find({email: user}, callback(ret) {
-    //         if(ret)
-    //             callback(null, ret.id)
-    //         else
-    //             callback(null, null)
-    // })
+    if(!config.users || config.users.length == 0) {
+        console.warn("No users configured. Please add users to config.json");
+        return;
+    }
+    var userIndex = config.users.indexOf(user);
+    if(userIndex === -1) {
+        // deny
+        callback(null, null);
+        console.warn("Unregistered user: '" + user + "'");
+    } else {
+        // allow
+        callback(null, user)
+    }
 }
 function onTokenSent(req, res) {
-    res.render('sent', {delivery: delivery});
+    res.render('sent');
 }
 var requestTokenMiddleware = passwordless.requestToken(onRequestToken);
 router.post('/sendtoken', requestTokenMiddleware, onTokenSent);

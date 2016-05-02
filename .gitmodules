@@ -1,0 +1,3 @@
+[submodule "public/gfilter"]
+	path = public/gfilter
+	url = https://github.com/ubershmekel/gfilter

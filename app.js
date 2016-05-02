@@ -1,5 +1,4 @@
 var path = require('path');
-var fs = require('fs');
 
 var express = require('express');
 var logger = require('morgan');
@@ -12,6 +11,7 @@ var nedb = require('nedb');
 var email   = require("emailjs");
 
 var routes = require('./services/routes');
+var config = require('./services/config');
 
 var dbFolder = path.join(__dirname, 'db');
 
@@ -22,35 +22,11 @@ app.set('port', port);
 // TODO: Update `host` to this webapp that's linked via email
 var host = 'http://localhost:' + port + '/';
 
-///////////////////////////////////////////////////////////////////////////////
-// Setup configuration
-///////////////////////////////////////////////////////////////////////////////
-// TODO: Before you create 'config.json' this app will console.log the URLs to validate logins.
-// The config file should look like this.:
-/*
-{
-    smtp: {
-        user:     "DO NOT COMMIT THIS FILE WITH YOUR CREDENTIALS", 
-        password: "yourpassword", 
-        host:     "your smtp service host like smtp.gmail.com or smtp.sparkpostmail.com",
-        port:     465,
-        ssl:      true,
-        from:     "example@example.com"
-    }
-}
-*/
-var config = {};
-var configFileName = './config.json';
-try { 
-    fs.statSync(configFileName);
-    config = require(configFileName);
-} catch (err) {
-    console.log("Failed to load configuration: " + err);
-};
 var smtpServer = null;
 var tokenDeliveryMethod = "console.log";
 if(config.smtp)
     smtpServer = email.server.connect(config.smtp);
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // Setup of Passwordless
