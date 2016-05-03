@@ -4,7 +4,7 @@
     <link rel='stylesheet' href='/stylesheets/style.css' type='text/css'>
   </head>
   <body>
-    <h1>Passwordless example with email and NeDB</h1>
+    <h1>WebQueryViz</h1>
     <ul>
       <li>
         <% if(user) { %>
@@ -14,9 +14,15 @@
             <a href='/login'>Login / Register</a>
         <% } %>
       </li>
-      <li>
+      <!--li>
         <a href='/restricted'>Restricted page</a>
-      </li>
+      </li-->
+    </ul>
+    <ul class="vizList">
+    <% console.log(vizList) %>
+      <% for(var i=0; i < vizList.length; i++) {%>
+        <li><a href="<%= vizList[i].href %>"><%= vizList[i].name %></a></li>
+      <% } %>
     </ul>
   </body>
 </html>

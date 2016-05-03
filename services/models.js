@@ -3,6 +3,7 @@ var fs = require('fs');
 
 var nedb = require('nedb');
 var sqlite3 = require('sqlite3');
+var Teradata = require("teradata");
 
 var siteDB = new nedb({
     filename: path.join(__dirname, '..', 'db', 'site.nedb'),
@@ -10,7 +11,8 @@ var siteDB = new nedb({
 });
 
 var dbTypes = {
-    sqlite: 'sqlite'
+    sqlite: 'sqlite',
+    teradata: 'teradata'
 }
 
 var modelTypes = {
@@ -24,6 +26,24 @@ function newObj(doc) {
         if(err)
             console.log("Failed inserting doc: " + err);
     });
+}
+
+dbFetch = {};
+dbFetch[dbTypes.sqlite] = function(sourceDoc, queryDoc, callback) {
+    return fetchSQLite(sourceDoc.filepath, queryDoc.query, callback);
+}
+
+dbFetch[dbTypes.teradata] = function(sourceDoc, queryDoc, callback) {
+    Teradata.connect(sourceDoc.url, sourceDoc.user, sourceDoc.password)
+        .then(function () {
+            return Teradata.executeQuery(queryDoc.query, queryDoc.limit);
+        })
+        .then(function (records) {
+            //console.log("Updated %d records", updateCount);
+            var err = null;
+            callback(err, records);
+            return Teradata.disconnect();
+        });  
 }
 
 function fetchSQLite(filepath, query, callback) {
@@ -71,8 +91,9 @@ exports.getQueryData = function(id, callback) {
                 return;
             }
             var source = docs[0];
-            if(source.dbType === dbTypes.sqlite) {
-                fetchSQLite(source.filepath, queryDoc.query, callback);
+            var fetchFunc = dbFetch[source.dbType];
+            if(fetchFunc) {
+                fetchFunc(source, queryDoc, callback);
             } else {
                 var warn = "No db type handler for: '" + source.dbType;
                 console.warn(warn);
@@ -82,10 +103,18 @@ exports.getQueryData = function(id, callback) {
             }
         });
     });
-}
+};
 
 exports.getQueryList = function(callback) {
     siteDB.find({ type: modelTypes.query }, function (err, docs) {
+        // docs is an array containing documents Mars, Earth, Jupiter
+        // If no document is found, docs is equal to []
+        callback(err, docs);
+    });
+}
+
+exports.getVizList = function(callback) {
+    siteDB.find({ type: modelTypes.viz }, function (err, docs) {
         // docs is an array containing documents Mars, Earth, Jupiter
         // If no document is found, docs is equal to []
         callback(err, docs);
@@ -108,6 +137,14 @@ function main() {
         query: 'SELECT date, latency, latency * 2 AS dlat FROM pings ORDER BY date DESC LIMIT 1000',
         type: modelTypes.query
     });
+    newObj({
+        _id: 'test_viz',
+        name: "Recent Pings To Google's 8.8.8.8",
+        queryId: 'latest_google_pings',
+        href: '/gfilter/?dl=/query/latest_google_pings&type=json&viz=plot&xprop=date',
+        type: modelTypes.viz
+    });
 }
+
 main();
 
