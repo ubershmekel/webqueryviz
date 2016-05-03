@@ -5,6 +5,16 @@ var nedb = require('nedb');
 var sqlite3 = require('sqlite3');
 var Teradata = require("teradata");
 
+var LRU = require("lru-cache");
+
+var hourInMs = 1000 * 60 * 60;
+var options = {
+    max: 1,
+    maxAge: hourInMs * 4
+};
+
+var cache = LRU(options);
+
 var siteDB = new nedb({
     filename: path.join(__dirname, '..', 'db', 'site.nedb'),
     autoload: true
@@ -51,6 +61,8 @@ function fetchSQLite(filepath, query, callback) {
     var sqliteDb = new sqlite3.Database(filepath, mode, function(err) {
         if(err) {
             console.warn("Failed to connect to sqlite: '" + filepath + "' with error: " + err)
+            // No need to call `callback(err);`
+            // It will be called by the query.
         }
     });
     sqliteDb.all(query, function(err, rows) {
@@ -70,6 +82,19 @@ exports.getQueryDoc = function(id, callback  /*function (err, docs)*/) {
     return siteDB.find(docToFind, callback);
 }
 
+function fetch(sourceDoc, queryDoc, callback) {
+    var fetchFunc = dbFetch[sourceDoc.dbType];
+    if(fetchFunc) {
+        fetchFunc(sourceDoc, queryDoc, callback);
+    } else {
+        var warn = "No db type handler for: '" + sourceDoc.dbType;
+        console.warn(warn);
+        var err = {message: warn, doc: queryDoc};
+        callback(err);
+        return;
+    }
+}
+
 exports.getQueryData = function(id, callback) {
     exports.getQueryDoc(id, function(err, docs){
         if(err || docs.length == 0) {
@@ -79,6 +104,7 @@ exports.getQueryData = function(id, callback) {
         }
 
         var queryDoc = docs[0];
+
         var sourceToFind = {
             _id: queryDoc.sourceId,
             type: modelTypes.source
@@ -90,16 +116,23 @@ exports.getQueryData = function(id, callback) {
                 callback(err);
                 return;
             }
-            var source = docs[0];
-            var fetchFunc = dbFetch[source.dbType];
-            if(fetchFunc) {
-                fetchFunc(source, queryDoc, callback);
+            var sourceDoc = docs[0];
+
+            var cacheKey = JSON.stringify([sourceDoc, queryDoc]);
+            var val = cache.get(cacheKey);
+            if (val) {
+                // cache hit
+                callback(null, val);
+                //console.log('Cache hit: ', cacheKey);
             } else {
-                var warn = "No db type handler for: '" + source.dbType;
-                console.warn(warn);
-                var err = {message: warn, doc: queryDoc};
-                callback(err);
-                return;
+                //console.log('Not cache hit:' , cacheKey)
+                fetch(sourceDoc, queryDoc, function(err, records) {
+                    if(!err) {
+                        //console.log('cache set: ', cacheKey);
+                        cache.set(cacheKey, records);
+                    }
+                    callback(err, records);
+                });
             }
         });
     });
