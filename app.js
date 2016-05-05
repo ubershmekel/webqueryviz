@@ -1,6 +1,7 @@
 var path = require('path');
 
 var express = require('express');
+var consolidate = require('consolidate');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var expressSession = require('express-session');
@@ -66,8 +67,13 @@ passwordless.addDelivery(deliverToken);
 // Express setup
 ///////////////////////////////////////////////////////////////////////////////
 // view engine
+// assign the templtae engine to .html files 
+app.engine('html', consolidate.mustache);
+
+// set .html as the default extension 
+app.set('view engine', 'html');
 app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'ejs');
+
 
 app.use(logger('dev'));
 app.use(bodyParser.json());

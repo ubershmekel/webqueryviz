@@ -1,4 +1,5 @@
 var express = require('express');
+var consolidate = require('consolidate');
 var passwordless = require('passwordless');
 
 var models = require('./models');
@@ -61,12 +62,14 @@ router.post('/sendtoken', requestTokenMiddleware, onTokenSent);
 router.get('/query/:id', passwordless.restricted(), function(req, res) {
     var docId = req.params.id;
     models.getQueryData(docId, function(err, rows) {
-        if(err)
+        if(err){
             res.status(500).send('500: Something broke!' + err);
-        else if (!rows || rows.length === 0)
-            res.status(404).send('404: Could not find query id: "' + docId + '"');
-        else
-            res.json(rows);
+        } else {
+            if (!rows || rows.length === 0)
+                res.status(404).send('404: Could not find data for query id: "' + docId + '"');
+            else
+                res.json(rows);
+        }
     })
 });
 
