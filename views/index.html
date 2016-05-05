@@ -7,22 +7,22 @@
     <h1>WebQueryViz</h1>
     <ul>
       <li>
-        <% if(user) { %>
-            User: <%= user %> (<a href='/logout'>logout</a>)
-        <% } else { %>
+        {{#user}}
+            User: {{.}} (<a href='/logout'>logout</a>)
+        {{/user}}
+        {{^user}}
             Not logged in
             <a href='/login'>Login / Register</a>
-        <% } %>
+        {{/user}}
       </li>
       <!--li>
         <a href='/restricted'>Restricted page</a>
       </li-->
     </ul>
     <ul class="vizList">
-    <% console.log(vizList) %>
-      <% for(var i=0; i < vizList.length; i++) {%>
-        <li><a href="<%= vizList[i].href %>"><%= vizList[i].name %></a></li>
-      <% } %>
+      {{#vizList}}
+        <li><a href="{{href}}">{{name}}</a></li>
+      {{/vizList}}
     </ul>
   </body>
 </html>

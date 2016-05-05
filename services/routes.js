@@ -13,9 +13,13 @@ var router = express.Router();
 ///////////////////////////////////////////////////////////////////////////////
 /* GET home page. */
 router.get('/', function(req, res) {
-    models.getVizList(function(err, docs) {
-        res.render('index', { user: req.user, vizList: docs });
-    });
+    if(req.user) {
+        models.getVizList(function(err, docs) {
+            res.render('index', { user: req.user, vizList: docs });
+        });
+    } else {
+        res.render('index', { user: req.user });
+    }
 });
 
 /* GET restricted site. */

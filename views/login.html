@@ -6,12 +6,13 @@
   <body>
     <h1>Passwordless - Login</h1>
     <p>
-    User: 
-    <% if(user) { %>
-    	<%= user %> (<a href='/logout'>logout</a>)
-    <% } else { %>
-    	Not logged in
-    <% } %>
+        {{#user}}
+            User: {{.}} (<a href='/logout'>logout</a>)
+        {{/user}}
+        {{^user}}
+            Not logged in
+            <a href='/login'>Login / Register</a>
+        {{/user}}
     </p>
     <p>
     <form action="/sendtoken" method="POST">
