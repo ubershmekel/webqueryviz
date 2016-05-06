@@ -89,6 +89,22 @@ router.get('/edit', passwordless.restricted(), function(req, res) {
     });
 });
 
+router.post('/edit', passwordless.restricted(), function(req, res) {
+    var newDocs = req.body;
+
+    var ids = [];
+    for(var i = 0; i < newDocs.length; i++) {
+        models.updateObj(newDocs[i], function(err, newDoc){
+        }); 
+        ids.push(newDocs[i]._id);
+    }
+    
+    models.deleteOtherIds(ids, function(err, numRemoved) {
+    });
+    
+    res.status(200);
+});
+
 ///////////////////////////////////////////////////////////////////////////////
 // Data Source and API routes
 ///////////////////////////////////////////////////////////////////////////////

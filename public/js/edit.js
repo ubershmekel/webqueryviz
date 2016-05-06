@@ -85,4 +85,10 @@ if(errors.length) {
 // Listen for changes
 editor.on("change",  function() {
     // Do something...
+    var xhr = new XMLHttpRequest();
+    xhr.open("POST", "", true);
+    //xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
+    xhr.setRequestHeader("Content-Type", "application/json");
+    var docsList = editor.getValue();
+    xhr.send(JSON.stringify(docsList));
 });

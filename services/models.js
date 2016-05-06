@@ -158,12 +158,41 @@ exports.getVizList = function(callback) {
 }
 
 exports.getEverything = function(callback) {
-    siteDB.find({}, function (err, docs) {
+    // Ignore "deleted" objects
+    siteDB.find({deleted: {$exists: false}}, function (err, docs) {
         // docs is an array containing documents Mars, Earth, Jupiter
         // If no document is found, docs is equal to []
         callback(err, docs);
     });
 }
+
+exports.deleteOtherIds = function(ids, callback) {
+    // Note we don't actually delete anything - we just mark it as "deleted"
+    var update = {
+        $set: { deleted: true }
+    }
+    var options = {
+        multi: true
+    }
+    siteDB.update({_id: {$nin: ids}}, update, options, function(err, numAffected, affectedDocuments, upsert) {
+        console.log("deleted: " + numAffected);
+        if(err)
+            console.warn("Failed deleting docs: " + err);
+        callback(err, numAffected);
+    });
+}
+
+exports.updateObj = function(doc, callback) {
+    var options = {
+        upsert: true
+    }
+    siteDB.update({_id: doc._id}, doc, options, function(err, numAffected, affectedDocuments, upsert) {
+        if(err)
+            console.warn("Failed updating doc: " + err);
+        callback(err, numAffected);
+    });
+}
+
 
 function main() {
     // Temp gui for adding viz
