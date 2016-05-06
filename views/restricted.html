@@ -1,19 +1,10 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <link rel='stylesheet' href='/stylesheets/style.css' type='text/css'>
   </head>
   <body>
-    <h1>Restricted page!</h1>
-    <p>
-        {{#user}}
-            User: {{.}} (<a href='/logout'>logout</a>)
-        {{/user}}
-        {{^user}}
-            Not logged in
-            <a href='/login'>Login / Register</a>
-        {{/user}}
-    </p>
+    {{> header }}
+
     <p>
         This page is only accessible for authenticated users! Psssss... This is a secret!
     </p>

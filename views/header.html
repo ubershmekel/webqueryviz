@@ -1,0 +1,16 @@
+<link rel='stylesheet' href='/stylesheets/style.css' type='text/css'>
+<div id="header">
+    <a id="title" href="/">{{ title }}</a>
+    <span id="menu">
+        {{#user}}
+            <a href="/edit">Edit Objects</a>
+            <span id="logon">
+                {{.}} (<a href='/logout'>logout</a>)
+            </span>
+        {{/user}}
+        {{^user}}
+            Not logged in
+            (<a href='/login'>Login / Register</a>)
+        {{/user}}
+    </span>
+</div>

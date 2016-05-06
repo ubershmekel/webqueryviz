@@ -1,28 +1,17 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <link rel='stylesheet' href='/stylesheets/style.css' type='text/css'>
   </head>
   <body>
-    <h1>WebQueryViz</h1>
-    <ul>
-      <li>
-        {{#user}}
-            User: {{.}} (<a href='/logout'>logout</a>)
-        {{/user}}
-        {{^user}}
-            Not logged in
-            <a href='/login'>Login / Register</a>
-        {{/user}}
-      </li>
-      <!--li>
-        <a href='/restricted'>Restricted page</a>
-      </li-->
-    </ul>
-    <ul class="vizList">
-      {{#vizList}}
-        <li><a href="{{href}}">{{name}}</a></li>
-      {{/vizList}}
-    </ul>
+    {{> header }}
+    
+    <div id="content">
+      <h2>Visualizations</h2>
+      <ul class="vizList">
+        {{#vizList}}
+          <li><a href="{{href}}">{{name}}</a></li>
+        {{/vizList}}
+      </ul>
+    </div>
   </body>
 </html>

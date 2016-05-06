@@ -20,6 +20,7 @@ var options = {
         items: {
             type: "object",
             headerTemplate: "{{ self.type }} - {{ self._id }}",
+            defaultProperties: ["_id", "type", "name"],
             properties: {
                 name: { "type": "string" },
                 _id: { "type": "string" },
@@ -63,11 +64,11 @@ function createEditor(holderId, title, data) {
 
 
 for(var i = 0; i < docs.length; i++) {
-    //createEditor("editor_holder", docs[i]._id, docs[i]);
+    //createEditor("content", docs[i]._id, docs[i]);
     //docs[i].id = docs[i]._id;
 }
 
-createEditor("editor_holder", "Objects", docs);
+createEditor("content", "Objects", docs);
 
 
 // Get the value
