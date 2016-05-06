@@ -1,0 +1,23 @@
+<head>
+    <title>Edit Objects</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" />
+    <style>
+        button { height: 34px; }
+    </style>
+    <!--link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/foundation/5.5.3/css/foundation.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/foundicons/3.0.0/foundation-icons.min.css"/-->
+</head>
+<body style="padding: 10px;">
+    <a href="/">Home</a>
+    <div id="editor_holder"></div>
+</body>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/json-editor/0.7.25/jsoneditor.js"></script>
+<script>
+var docs = {{{ docs }}};
+var dbTypesArray = {{{ dbTypesArray }}};
+var modelTypesArray = {{{ modelTypesArray }}};
+</script>
+
+<script src="/js/edit.js"></script>

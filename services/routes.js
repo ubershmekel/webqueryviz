@@ -27,6 +27,19 @@ router.get('/restricted', passwordless.restricted(), function(req, res) {
     res.render('restricted', { user: req.user });
 });
 
+router.get('/edit', passwordless.restricted(), function(req, res) {
+    models.getEverything( function(err, docs) {
+        var templateData = {
+            user: req.user,
+            err: err,
+            docs: JSON.stringify(docs),
+            dbTypesArray: JSON.stringify(models.dbTypesArray),
+            modelTypesArray: JSON.stringify(models.modelTypesArray),
+        }
+        res.render('edit', templateData);
+    });
+});
+
 /* GET login screen. */
 router.get('/login', function(req, res) {
     res.render('login', { user: req.user });

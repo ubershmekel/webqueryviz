@@ -1,6 +1,6 @@
 {
-  "name": "webqueryviz",
-  "description": "Run queries, visualize data",
+  "name": "webquerychart",
+  "description": "Connect databases, run queries, visualize data",
   "private": false,
   "version": "0.0.8",
   "scripts": {

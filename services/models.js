@@ -24,12 +24,15 @@ var dbTypes = {
     sqlite: 'sqlite',
     teradata: 'teradata'
 }
+var dbTypesArray = Object.keys(dbTypes);
+
 
 var modelTypes = {
     source: "source",
     query: "query",
     viz: "viz"
 }
+var modelTypesArray = Object.keys(modelTypes);
 
 function newObj(doc) {
     siteDB.insert(doc, function(err, newDoc) {
@@ -44,7 +47,7 @@ dbFetch[dbTypes.sqlite] = function(sourceDoc, queryDoc, callback) {
 }
 
 dbFetch[dbTypes.teradata] = function(sourceDoc, queryDoc, callback) {
-    Teradata.connect(sourceDoc.url, sourceDoc.user, sourceDoc.password)
+    Teradata.connect(sourceDoc.host, sourceDoc.username, sourceDoc.password)
         .then(function () {
             return Teradata.executeQuery(queryDoc.query, queryDoc.limit);
         })
@@ -154,7 +157,13 @@ exports.getVizList = function(callback) {
     });
 }
 
-
+exports.getEverything = function(callback) {
+    siteDB.find({}, function (err, docs) {
+        // docs is an array containing documents Mars, Earth, Jupiter
+        // If no document is found, docs is equal to []
+        callback(err, docs);
+    });
+}
 
 function main() {
     // Temp gui for adding viz
@@ -181,3 +190,6 @@ function main() {
 
 main();
 
+exports.dbTypes = dbTypes;
+exports.dbTypesArray = dbTypesArray;
+exports.modelTypesArray = modelTypesArray;
