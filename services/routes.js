@@ -3,6 +3,7 @@ var consolidate = require('consolidate');
 var passwordless = require('passwordless');
 
 var models = require('./models');
+var dbTypesArray = require('./connectors').dbTypesArray;
 var config = require('./config');
 
 var router = express.Router();
@@ -82,7 +83,7 @@ router.get('/edit', passwordless.restricted(), function(req, res) {
             title: "Edit Objects",
             err: err,
             docs: JSON.stringify(docs),
-            dbTypesArray: JSON.stringify(models.dbTypesArray),
+            dbTypesArray: JSON.stringify(dbTypesArray),
             modelTypesArray: JSON.stringify(models.modelTypesArray),
         };
         render(req, res, 'edit', templateData);

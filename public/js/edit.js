@@ -1,10 +1,3 @@
-console.log(docs);
-
-// Set default options
-//JSONEditor.defaults.options.theme = 'foundation5';
-//JSONEditor.defaults.options.iconlib = 'foundation3';
-//JSONEditor.defaults.options.theme = 'bootstrap3';
-//JSONEditor.defaults.options.iconlib = 'bootstrap3';
 
 // Initialize the editor
 var options = {

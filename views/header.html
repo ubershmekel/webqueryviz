@@ -1,3 +1,23 @@
+<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/humane-js/3.2.2/themes/flatty.css" />
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/humane-js/3.2.2/humane.js"></script>
+<script>
+    humane.timeout = 3500;
+    humane.error = humane.spawn({ addnCls: 'humane-flatty-error'});
+    window.onerror = function(msg, url, linenumber) {
+        // Tell users when errors occur
+        // http://stackoverflow.com/questions/2604976/javascript-how-to-display-script-errors-in-a-popup-alert/2604997#2604997
+        humane.error("An error: " + msg);
+
+        // `false` to report on dev console too
+        return false;
+    };
+    function error(msg) {
+        humane.error(msg);
+        console.error(msg);
+    }
+</script>
+
+
 <link rel='stylesheet' href='/stylesheets/style.css' type='text/css'>
 <div id="header">
     <a id="title" href="/">{{ title }}</a>

@@ -2,10 +2,11 @@ var path = require('path');
 var fs = require('fs');
 
 var nedb = require('nedb');
-var sqlite3 = require('sqlite3');
-var Teradata = require("teradata");
-
 var LRU = require("lru-cache");
+
+var connectors = require("./connectors");
+var dbFetch = connectors.dbFetch;
+var dbTypes = connectors.dbTypes;
 
 var hourInMs = 1000 * 60 * 60;
 var options = {
@@ -19,12 +20,6 @@ var siteDB = new nedb({
     filename: path.join(__dirname, '..', 'db', 'site.nedb'),
     autoload: true
 });
-
-var dbTypes = {
-    sqlite: 'sqlite',
-    teradata: 'teradata'
-}
-var dbTypesArray = Object.keys(dbTypes);
 
 
 var modelTypes = {
@@ -41,39 +36,7 @@ function newObj(doc) {
     });
 }
 
-dbFetch = {};
-dbFetch[dbTypes.sqlite] = function(sourceDoc, queryDoc, callback) {
-    return fetchSQLite(sourceDoc.filepath, queryDoc.query, callback);
-}
 
-dbFetch[dbTypes.teradata] = function(sourceDoc, queryDoc, callback) {
-    Teradata.connect(sourceDoc.host, sourceDoc.username, sourceDoc.password)
-        .then(function () {
-            return Teradata.executeQuery(queryDoc.query, queryDoc.limit);
-        })
-        .then(function (records) {
-            //console.log("Updated %d records", updateCount);
-            var err = null;
-            callback(err, records);
-            return Teradata.disconnect();
-        });  
-}
-
-function fetchSQLite(filepath, query, callback) {
-    var mode = sqlite3.OPEN_READONLY;
-    var sqliteDb = new sqlite3.Database(filepath, mode, function(err) {
-        if(err) {
-            console.warn("Failed to connect to sqlite: '" + filepath + "' with error: " + err)
-            // No need to call `callback(err);`
-            // It will be called by the query.
-        }
-    });
-    sqliteDb.all(query, function(err, rows) {
-        if(err)
-            console.warn("Failed querying sqlite: '" + query + "' with error: " + err);
-        callback(err, rows);
-    });
-}
 
 exports.getQueryDoc = function(id, callback  /*function (err, docs)*/) {
     // docs is an array containing documents Mars, Earth, Jupiter
@@ -219,6 +182,4 @@ function main() {
 
 main();
 
-exports.dbTypes = dbTypes;
-exports.dbTypesArray = dbTypesArray;
 exports.modelTypesArray = modelTypesArray;
