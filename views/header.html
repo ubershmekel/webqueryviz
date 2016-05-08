@@ -18,8 +18,10 @@
     }
 </script>
 
-
+<link rel='stylesheet' href='/stylesheets/reset.css' type='text/css'>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" />
 <link rel='stylesheet' href='/stylesheets/style.css' type='text/css'>
+
 <div id="header">
     <a id="title" href="/">{{ title }}</a>
     <span id="menu">
@@ -31,8 +33,10 @@
             </span>
         {{/user}}
         {{^user}}
-            Not logged in
-            (<a href='/login'>Login / Register</a>)
+            <span class="menuPageLink" id="logon">
+                Not logged in
+                (<a href='/login'>Login / Register</a>)
+            </span>
         {{/user}}
     </span>
 </div>

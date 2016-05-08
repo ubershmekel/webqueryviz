@@ -2,12 +2,9 @@
     <style>
         button { height: 34px; }
     </style>
-    <!--link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/foundation/5.5.3/css/foundation.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/foundicons/3.0.0/foundation-icons.min.css"/-->
 </head>
 <body>
     {{> header }}
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" />
     <div id="content">
         <div id="newButtons"></div>
         <div id="editorContainer"></div>
@@ -20,6 +17,21 @@
 {{=<% %>=}}
 
 <script id="tableTemplate" type="x-tmpl-mustache">
+    <div class="well">
+        <h2>Pick X-Axis</h2>
+        {{#headers}}
+            <label class="myRadio">
+                <input class="xpropSelector" type="radio" name="xprop" value="{{.}}">
+                {{.}}
+            </label>
+        {{/headers}}
+        
+        <div>
+            <a id="vizLink">Pick X-Axis and this becomes the link to your chart</a>
+        </div>
+    </div>
+    
+    <h2>Preview Table</h2>
     <table class="table table-striped">
         <tr>
             {{#headers}}

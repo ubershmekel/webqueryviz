@@ -157,6 +157,26 @@ function handleQueryData(err, docs) {
     var rendered = Mustache.render(template, templateData);
     $('#tablePreview').html(rendered);
     
+    var vizLink = $('#vizLink');
+    
+    var xpropSelector = '.xpropSelector';
+    var gfilterTemplate = 'http://localhost:3000/gfilter/?dl=/query/{{queryId}}&type=json&viz=plot&xprop={{xprop}}';
+    $(xpropSelector).change(function(ev) {
+        var xpropSelected = $(xpropSelector + ':checked').val();
+        var href = 'javascript:void(0);';
+        if(xpropSelected) {
+            var queryId = editor.getValue()._id;
+            var gfilterTemplateData = {
+                queryId: queryId,
+                xprop: xpropSelected
+            };
+            href = Mustache.render(gfilterTemplate, gfilterTemplateData);
+            vizLink.attr("href", href);
+        } else {
+            vizLink.removeAttr("href");
+        }
+        
+    });
 }
 
 function onPreviewClick(ev) {
