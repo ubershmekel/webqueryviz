@@ -11,20 +11,44 @@
     <div id="content">
         <div id="newButtons"></div>
         <div id="editorContainer"></div>
+        <div id="tablePreview"></div>
     </div>
 </body>
 
+
+{{! Changing escape to include mustache templates raw }}
+{{=<% %>=}}
+
+<script id="tableTemplate" type="x-tmpl-mustache">
+    <table class="table table-striped">
+        <tr>
+            {{#headers}}
+                <th>{{.}}</th>
+            {{/headers}}
+        </tr>
+        {{#rows}}
+            <tr>
+                {{#.}}
+                <td>{{.}}</td>
+                {{/.}}
+            </tr>
+        {{/rows}}
+    </table>
+    Note table limited to 100 rows in preview.
+</script>
+
+<%={{ }}=%>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/json-editor/0.7.25/jsoneditor.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mustache.js/2.2.1/mustache.js"></script>
+<script src="https://code.jquery.com/jquery-1.12.3.js" integrity="sha256-1XMpEtA4eKXNNpXcJ1pmMPs8JV+nwLdEqwiJeCQEkyc=" crossorigin="anonymous"></script>
+<script src="/socket.io/socket.io.js"></script>
+
 <script>
 var docs = {{{ docs }}};
 var editObjectId = "{{ editObjectId }}";
 var dbTypesArray = {{{ dbTypesArray }}};
 var modelTypesArray = {{{ modelTypesArray }}};
-
-///<script src="/socket.io/socket.io.js">< /script>
-//var socket = io();
-//socket.emit('chat message', 'bla');
-
 </script>
 
 <script src="/js/edit.js"></script>

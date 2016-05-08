@@ -123,14 +123,14 @@ router.post(editUrlFormat, passwordless.restricted(), function(req, res) {
 ///////////////////////////////////////////////////////////////////////////////
 // Data Source and API routes
 ///////////////////////////////////////////////////////////////////////////////
-router.get('/query/:slug', passwordless.restricted(), function(req, res) {
-    var slug = req.params.slug;
-    models.getQueryData(slug, function(err, rows) {
+router.get('/query/:id/:slug?', passwordless.restricted(), function(req, res) {
+    var id = req.params.id;
+    models.getQueryData(id, function(err, rows) {
         if(err){
             res.status(500).send('500: Something broke!' + err);
         } else {
             if (!rows || rows.length === 0)
-                res.status(404).send('404: Could not find data for slug: "' + slug + '"');
+                res.status(404).send('404: Could not find data for id: "' + id + '"');
             else
                 res.json(rows);
         }

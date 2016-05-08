@@ -139,11 +139,11 @@ var server = app.listen(app.get('port'), function() {
     console.log('Browse at: ' + host);
 });
 
-/*
-TODO: make socketio work.
+//TODO: make socketio work with passwordless.
 
 var ioLib = require('socket.io');
 var io = ioLib(server);
+/*
 io.use(function(socket, next) {
     // fake it to be like express
     socket.request.query = {}; 
@@ -162,14 +162,15 @@ io.use(function(socket, next) {
     //    return next();
     //next(new Error('Authentication error'));
 });
+*/
+
+var models = require('./services/models');
 io.on('connection', function(socket) {
     // TODO: passwordless middleware
      socket.emit('hello', 'whatcha doing?');
-     socket.on('mymsg', function(msg) {
-         console.log('wtf');
-     });
+     socket.on('getQueryDataFromDoc', models.getQueryDataFromDoc);
 });
-*/
+
 
 server.listen(app.get('port'));
 

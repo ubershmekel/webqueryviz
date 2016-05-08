@@ -1,3 +1,5 @@
+var socket = io();
+
 var allProps = {
     name: {
         "type": "string",
@@ -121,6 +123,60 @@ function randomString(len, charSet) {
     return randomString;
 }
 
+function handleQueryData(err, docs) {
+    if(err || !docs) {
+        error("Failed to get query data:" + err);
+        return;
+    }
+    //console.log(docs);
+    
+    if(docs.length === 0) {
+        error("Zero results");
+        return;
+    }
+    var headers = Object.keys(docs[0]);
+    var previewRows = [];
+    var previewLen = 100;
+    if(docs.length < previewLen)
+        previewLen = docs.length;
+    
+    for (var i = 0; i < previewLen; i++) {
+        var row = [];
+        previewRows.push(row);
+        for(var j = 0; j < headers.length; j++) {
+            row.push(docs[i][headers[j]]);
+        }
+    }
+    
+    var template = $('#tableTemplate').html();
+    Mustache.parse(template);   // optional, speeds up future uses
+    var templateData = {
+        headers: headers,
+        rows: previewRows
+    }
+    var rendered = Mustache.render(template, templateData);
+    $('#tablePreview').html(rendered);
+    
+}
+
+function onPreviewClick(ev) {
+    //var id = editor.getValue('root._id');
+    var doc = editor.getValue();
+    if(doc)
+        socket.emit('getQueryDataFromDoc', doc, handleQueryData);
+    else
+        error('Preview requires an id not: "' + id + '"');
+}
+
+function queryEditorSetup(editor) {
+    var isQueryEd = editor.getEditor('root.query');
+    if(!isQueryEd)
+        return;
+    
+    var button = createButton("preview", "btn", "Preview", onPreviewClick);
+    editor.element.appendChild(button);
+}
+
 function createEditor(title, data, schema) {
     if(schema)
         options.schema = schema;
@@ -138,7 +194,6 @@ function createEditor(title, data, schema) {
 
     // Hide the things users should not modify
     //editor.getEditor('root._id').disable();
-    //editor.getEditor('root.type').hide();
     var toHide = ['root._id', 'root.type'];
     toHide.forEach(function(val) {
         var edElem = editor.getEditor(val);
@@ -146,27 +201,29 @@ function createEditor(title, data, schema) {
             edElem.container.style.display = 'none';
     });
     
-    // Get the value
-    //var data = editor.getValue();
-    //console.log(data.name); // "John Smith"
-
-    //sendChangesToServer(editor);
+    // Tooltips
+    var edElem = editor.getEditor('root.password');
+    if(edElem)
+        edElem.container.setAttribute("title", "Passwords are stored as plain text on the server - beware")
     
-    var saveButton = createButton("save", "btn btn-primary", "Save", sendChangesToServer);
+    // Buttons
+    var saveButton = createButton("save", "btn btn-primary", "Save", onSaveClick);
     holderElem.appendChild(saveButton);
     
-    var deleteButton = createButton("delete", "btn btn-danger", "Delete", sendDeleteObject);
+    var deleteButton = createButton("delete", "btn btn-danger", "Delete", onDeleteClick);
     holderElem.appendChild(deleteButton);
+    
+    queryEditorSetup(editor);
 
     return editor;
 }
 
-function sendDeleteObject(mouseEvent) {
+function onDeleteClick(mouseEvent) {
     // TODO: implement
     humane.error("Not yet implemented");
 }
 
-function sendChangesToServer(mouseEvent) {
+function onSaveClick(mouseEvent) {
     // Validate
     function isValid() {
         var errors = editor.validate();
@@ -183,6 +240,8 @@ function sendChangesToServer(mouseEvent) {
         return;
     }
     console.log("Sending update to doc");
+    
+    // TODO: make socketio safe
     var doc = editor.getValue();
     var jsonNewDoc = JSON.stringify(doc);
     var xhr = new XMLHttpRequest();

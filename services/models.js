@@ -46,15 +46,15 @@ function newObj(doc, callback) {
 
 
 
-exports.getQueryDoc = function(slug, callback  /*function (err, docs)*/) {
+exports.getQueryDoc = function(_id, callback  /*function (err, docs)*/) {
     // docs is an array containing documents Mars, Earth, Jupiter
     // If no document is found, docs is equal to []
     var docToFind = {
-        slug: slug,
+        _id: _id,
         type: modelTypes.query
     };
     return siteDB.find(docToFind, callback);
-}
+};
 
 function fetch(sourceDoc, queryDoc, callback) {
     var fetchFunc = dbFetch[sourceDoc.dbType];
@@ -69,46 +69,49 @@ function fetch(sourceDoc, queryDoc, callback) {
     }
 }
 
-exports.getQueryData = function(slug, callback) {
-    exports.getQueryDoc(slug, function(err, queryDocsList){
-        if(err || queryDocsList.length == 0) {
+exports.getQueryDataFromDoc = function(queryDoc, callback) {
+    var sourceToFind = {
+        _id: queryDoc.sourceId,
+        type: modelTypes.source
+    };
+
+    siteDB.find(sourceToFind, function (err, sourcesList) {
+        if(err || !sourcesList || sourcesList.length === 0) {
+            console.warn("Failed getting source: '" + queryDoc.sourceId + "' with error: " + err);
+            callback(err);
+            return;
+        }
+        var sourceDoc = sourcesList[0];
+
+        var cacheKey = JSON.stringify([sourceDoc, queryDoc]);
+        var val = cache.get(cacheKey);
+        if (val) {
+            // cache hit
+            callback(null, val);
+            //console.log('Cache hit: ', cacheKey);
+        } else {
+            //console.log('Not cache hit:' , cacheKey)
+            fetch(sourceDoc, queryDoc, function(err, records) {
+                if(!err) {
+                    //console.log('cache set: ', cacheKey);
+                    cache.set(cacheKey, records);
+                }
+                callback(err, records);
+            });
+        }
+    });
+};
+
+exports.getQueryData = function(id, callback) {
+    exports.getQueryDoc(id, function(err, queryDocsList){
+        if(err || queryDocsList.length === 0) {
             console.warn("Failed getting query: '" + id + "' with error: " + err);
             callback(err);
             return;
         }
 
         var queryDoc = queryDocsList[0];
-
-        var sourceToFind = {
-            _id: queryDoc.sourceId,
-            type: modelTypes.source
-        };
-
-        siteDB.find(sourceToFind, function (err, sourcesList) {
-            if(err || !sourcesList || sourcesList.length === 0) {
-                console.warn("Failed getting source: '" + queryDoc.sourceId + "' with error: " + err);
-                callback(err);
-                return;
-            }
-            var sourceDoc = sourcesList[0];
-
-            var cacheKey = JSON.stringify([sourceDoc, queryDoc]);
-            var val = cache.get(cacheKey);
-            if (val) {
-                // cache hit
-                callback(null, val);
-                //console.log('Cache hit: ', cacheKey);
-            } else {
-                //console.log('Not cache hit:' , cacheKey)
-                fetch(sourceDoc, queryDoc, function(err, records) {
-                    if(!err) {
-                        //console.log('cache set: ', cacheKey);
-                        cache.set(cacheKey, records);
-                    }
-                    callback(err, records);
-                });
-            }
-        });
+        exports.getQueryDataFromDoc(queryDoc, callback);
     });
 };
 
