@@ -1,17 +1,50 @@
 <!DOCTYPE html>
 <html>
-  <head>
-  </head>
-  <body>
-    {{> header }}
-    
-    <div id="content">
-      <h2>Visualizations</h2>
-      <ul class="vizList">
-        {{#vizList}}
-          <li><a href="{{href}}">{{name}}</a></li>
-        {{/vizList}}
-      </ul>
-    </div>
-  </body>
+    <head>
+    </head>
+    <body>
+        {{> header }}
+        
+        <div id="content">
+            WebQueryChart lets you visualize data by writing queries.
+
+            <h2>Visualizations</h2>
+            <ul class="vizList">
+                {{#docs.viz}}
+                    <li><a href="{{href}}">{{#name}}{{.}}{{/name}}{{^name}}{{slug}}{{/name}}</a>
+                      <a href="/edit/{{_id}}/{{slug}}">(edit)</a>
+                    </li>
+                {{/docs.viz}}
+            </ul>
+
+            <h2>Queries</h2>
+            <ul class="vizList">
+                {{#docs.query}}
+                    <li><a href="{{href}}">{{#name}}{{.}}{{/name}}{{^name}}{{slug}}{{/name}}</a>
+                      <a href="/edit/{{_id}}/{{slug}}">(edit)</a>
+                    </li>
+                {{/docs.query}}
+            </ul>
+            
+            <h2>Sources</h2>
+            <ul class="vizList">
+                {{#docs.source}}
+                    <li>
+                      <a href="{{href}}">{{#name}}{{.}}{{/name}}{{^name}}{{slug}}{{/name}}</a>
+                      <a href="/edit/{{_id}}/{{slug}}">(edit)</a>
+                    </li>
+                {{/docs.source}}
+            </ul>
+            
+
+        <!--script src="/socket.io/socket.io.js"></script>
+        <script>
+        var socket = io();
+        socket.emit('mymsg', 'bla');
+        socket.on('hello', function(msg) {
+            console.log(msg); error('io ' + msg);
+        });
+        </script-->
+        </div>
+    </body>
 </html>

@@ -99,11 +99,13 @@ var sessionWare = expressSession({
     },    
     store: sessionStore
 });
-app.use(sessionWare);
 
 // Passwordless middleware
-app.use(passwordless.sessionSupport());
-app.use(passwordless.acceptToken({ successRedirect: '/' }));
+app.use(sessionWare);
+var existingSessionAuthWare = passwordless.sessionSupport();
+app.use(existingSessionAuthWare);
+var newSessionAuthWare = passwordless.acceptToken({ successRedirect: '/' });
+app.use(newSessionAuthWare);
 
 ///////////////////////////////////////////////////////////////////////////////
 // Routes setup 
@@ -129,6 +131,42 @@ app.use(function(err, req, res, next) {
     });
 });
 
+
 var server = app.listen(app.get('port'), function() {
     console.log('Browse at: ' + host);
 });
+
+/*
+TODO: make socketio work.
+
+var ioLib = require('socket.io');
+var io = ioLib(server);
+io.use(function(socket, next) {
+    // fake it to be like express
+    socket.request.query = {}; 
+    var fakeRes = {
+        end: function() {
+            socket.close();
+        }
+    }
+    
+    sessionWare(socket.request, fakeRes, next);
+    existingSessionAuthWare(socket.request, fakeRes, next);
+    newSessionAuthWare(socket.request, fakeRes, next);
+    var restrictMiddleware = passwordless.restricted();
+    restrictMiddleware(socket.request, fakeRes, next);
+    //if (socket.request.headers.cookie)
+    //    return next();
+    //next(new Error('Authentication error'));
+});
+io.on('connection', function(socket) {
+    // TODO: passwordless middleware
+     socket.emit('hello', 'whatcha doing?');
+     socket.on('mymsg', function(msg) {
+         console.log('wtf');
+     });
+});
+*/
+
+server.listen(app.get('port'));
+

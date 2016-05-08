@@ -21,6 +21,11 @@ var siteDB = new nedb({
     autoload: true
 });
 
+siteDB.ensureIndex({ fieldName: 'slug', unique: true }, function (err) {
+    if(err)
+        console.error("Failed to set unique constraint");
+});
+
 
 var modelTypes = {
     source: "source",
@@ -38,11 +43,11 @@ function newObj(doc) {
 
 
 
-exports.getQueryDoc = function(id, callback  /*function (err, docs)*/) {
+exports.getQueryDoc = function(slug, callback  /*function (err, docs)*/) {
     // docs is an array containing documents Mars, Earth, Jupiter
     // If no document is found, docs is equal to []
     var docToFind = {
-        _id: id,
+        slug: slug,
         type: modelTypes.query
     };
     return siteDB.find(docToFind, callback);
@@ -61,28 +66,28 @@ function fetch(sourceDoc, queryDoc, callback) {
     }
 }
 
-exports.getQueryData = function(id, callback) {
-    exports.getQueryDoc(id, function(err, docs){
-        if(err || docs.length == 0) {
+exports.getQueryData = function(slug, callback) {
+    exports.getQueryDoc(slug, function(err, queryDocsList){
+        if(err || queryDocsList.length == 0) {
             console.warn("Failed getting query: '" + id + "' with error: " + err);
             callback(err);
             return;
         }
 
-        var queryDoc = docs[0];
+        var queryDoc = queryDocsList[0];
 
         var sourceToFind = {
             _id: queryDoc.sourceId,
             type: modelTypes.source
         };
 
-        siteDB.find(sourceToFind, function (err, docs) {
-            if(err) {
+        siteDB.find(sourceToFind, function (err, sourcesList) {
+            if(err || !sourcesList || sourcesList.length === 0) {
                 console.warn("Failed getting source: '" + queryDoc.sourceId + "' with error: " + err);
                 callback(err);
                 return;
             }
-            var sourceDoc = docs[0];
+            var sourceDoc = sourcesList[0];
 
             var cacheKey = JSON.stringify([sourceDoc, queryDoc]);
             var val = cache.get(cacheKey);
@@ -122,10 +127,21 @@ exports.getVizList = function(callback) {
 
 exports.getEverything = function(callback) {
     // Ignore "deleted" objects
-    siteDB.find({deleted: {$exists: false}}, function (err, docs) {
+    siteDB.find({deleted: {$exists: false}}).exec(function (err, docsList) {
         // docs is an array containing documents Mars, Earth, Jupiter
         // If no document is found, docs is equal to []
-        callback(err, docs);
+        
+        // Group by type
+        var objectsByType = {};
+        for(var i = 0; i < docsList.length; i++) {
+            var doc = docsList[i];
+            var type = doc.type;
+            if(!objectsByType[type])
+                objectsByType[type] = [];
+            objectsByType[type].push(doc);
+        }
+        
+        callback(err, objectsByType);
     });
 }
 
@@ -160,23 +176,28 @@ exports.updateObj = function(doc, callback) {
 function main() {
     // Temp gui for adding viz
     newObj({
-        _id: 'google_ping_db',
+        type: modelTypes.source,
+        _id: "1",
+        slug: 'google_ping_db',
         dbType: dbTypes.sqlite,
+        name: 'My pings to 8.8.8.8',
         filepath: 'E:\\1stuff\\Dropbox\\dev\\python\\pinglog\\8.8.8.8.sqlite',
-        type: modelTypes.source
     });
     newObj({
-        _id: 'latest_google_pings',
-        sourceId: 'google_ping_db',
+        type: modelTypes.query,
+        _id: "2",
+        slug: 'latest_google_pings',
+        name: '8.8.8.8 Latency and double',
+        sourceId: '1',
         query: 'SELECT date, latency, latency * 2 AS dlat FROM pings ORDER BY date DESC LIMIT 1000',
-        type: modelTypes.query
     });
     newObj({
-        _id: 'test_viz',
+        type: modelTypes.viz,
+        _id: "3",
+        slug: 'test_viz',
         name: "Recent Pings To Google's 8.8.8.8",
-        queryId: 'latest_google_pings',
+        queryId: '2',
         href: '/gfilter/?dl=/query/latest_google_pings&type=json&viz=plot&xprop=date',
-        type: modelTypes.viz
     });
 }
 

@@ -1,5 +1,4 @@
 <head>
-    <title>Edit Objects</title>
     <style>
         button { height: 34px; }
     </style>
@@ -9,15 +8,23 @@
 <body>
     {{> header }}
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" />
-    <div id="content"></div>
+    <div id="content">
+        <div id="newButtons"></div>
+        <div id="editorContainer"></div>
+    </div>
 </body>
-
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/json-editor/0.7.25/jsoneditor.js"></script>
 <script>
 var docs = {{{ docs }}};
+var editObjectId = "{{ editObjectId }}";
 var dbTypesArray = {{{ dbTypesArray }}};
 var modelTypesArray = {{{ modelTypesArray }}};
+
+///<script src="/socket.io/socket.io.js">< /script>
+//var socket = io();
+//socket.emit('chat message', 'bla');
+
 </script>
 
 <script src="/js/edit.js"></script>

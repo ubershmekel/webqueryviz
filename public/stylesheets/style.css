@@ -101,3 +101,7 @@ p, ul, form {
 h2 {
     font-size: 1.5em;
 }
+
+.createButton {
+    margin: 10px;
+}

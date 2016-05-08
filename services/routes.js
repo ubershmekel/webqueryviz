@@ -17,16 +17,15 @@ function render(req, res, view, options) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// Passwordless
+// Home page
 ///////////////////////////////////////////////////////////////////////////////
-/* GET home page. */
 router.get('/', function(req, res) {
     var templateData = {
         title: "Web Query Chart"
     };
     if(req.user) {
-        models.getVizList(function(err, docs) {
-            templateData.vizList = docs;
+        models.getEverything(function(err, docs) {
+            templateData.docs = docs;
             render(req, res, 'index', templateData);
         });
     } else {
@@ -34,6 +33,9 @@ router.get('/', function(req, res) {
     }
 });
 
+///////////////////////////////////////////////////////////////////////////////
+// Passwordless
+///////////////////////////////////////////////////////////////////////////////
 /* GET restricted site. */
 router.get('/restricted', passwordless.restricted(), function(req, res) {
     render(req, res, 'restricted', {title: "Restricted Page"});
@@ -77,10 +79,11 @@ router.post('/sendtoken', requestTokenMiddleware, onTokenSent);
 ///////////////////////////////////////////////////////////////////////////////
 // Create read update delete
 ///////////////////////////////////////////////////////////////////////////////
-router.get('/edit', passwordless.restricted(), function(req, res) {
+router.get('/edit/:id?/:slug?', passwordless.restricted(), function(req, res) {
     models.getEverything( function(err, docs) {
         var templateData = {
             title: "Edit Objects",
+            editObjectId: req.params.id,
             err: err,
             docs: JSON.stringify(docs),
             dbTypesArray: JSON.stringify(dbTypesArray),
@@ -109,14 +112,14 @@ router.post('/edit', passwordless.restricted(), function(req, res) {
 ///////////////////////////////////////////////////////////////////////////////
 // Data Source and API routes
 ///////////////////////////////////////////////////////////////////////////////
-router.get('/query/:id', passwordless.restricted(), function(req, res) {
-    var docId = req.params.id;
-    models.getQueryData(docId, function(err, rows) {
+router.get('/query/:slug', passwordless.restricted(), function(req, res) {
+    var slug = req.params.slug;
+    models.getQueryData(slug, function(err, rows) {
         if(err){
             res.status(500).send('500: Something broke!' + err);
         } else {
             if (!rows || rows.length === 0)
-                res.status(404).send('404: Could not find data for query id: "' + docId + '"');
+                res.status(404).send('404: Could not find data for slug: "' + slug + '"');
             else
                 res.json(rows);
         }
