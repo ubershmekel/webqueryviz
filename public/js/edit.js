@@ -35,7 +35,11 @@ var allProps = {
     // query
     database: { "type": "string" },
     sourceId: { "type": "string" },
-    query: { "type": "string", format: "textarea" },
+    query: {
+        "type": "string",
+        "format": "textarea",
+        "minLength": 1,
+    },
     
     // viz
     queryId: { "type": "string" },
@@ -43,8 +47,8 @@ var allProps = {
 };
 
 
-var schemas = {};
-schemas.sqlite = {
+var sourceSchemas = {};
+sourceSchemas.sqlite = {
     type: "object",
     properties: {
         name: allProps.name,
@@ -52,7 +56,7 @@ schemas.sqlite = {
     }
 };
 
-schemas.mysql = {
+sourceSchemas.mysql = {
     type: "object",
     properties: {
         name: allProps.name,
@@ -62,14 +66,33 @@ schemas.mysql = {
     }    
 };
 
-schemas.teradata = schemas.mysql;
+sourceSchemas.teradata = sourceSchemas.mysql;
 
-
-schemas.everything = {
+sourceSchemas.everything = {
     type: "object",
     headerTemplate: "{{ self.type }} - {{ self.name }}",
     defaultProperties: ["_id", "type", "name"],
     properties: allProps
+};
+
+
+var sourceIdsArray = [];
+var sourceNamesArray = [];
+docs.source.forEach(function(doc) {
+    sourceIdsArray.push(doc._id);
+    sourceNamesArray.push(doc.name + ' - ' + doc.dbType);
+});
+
+querySchema = {
+    type: "object",
+    properties: {
+        name: allProps.name,
+        query: allProps.query,
+        sourceId: {
+            "type": "string",
+            "enum": sourceNamesArray,
+        },
+    }
 };
 
 
@@ -102,7 +125,7 @@ function createEditor(title, data, schema) {
     if(schema)
         options.schema = schema;
     else
-        options.schema = schemas.everything;
+        options.schema = sourceSchemas.everything;
     options.schema.title = title;
     var holderId = "editorContainer";
     var holderElem = document.getElementById(holderId);
@@ -132,7 +155,7 @@ function createEditor(title, data, schema) {
     var saveButton = createButton("save", "btn btn-primary", "Save", sendChangesToServer);
     holderElem.appendChild(saveButton);
     
-    var deleteButton = createButton("delete", "btn btn-warning", "Delete", sendDeleteObject);
+    var deleteButton = createButton("delete", "btn btn-danger", "Delete", sendDeleteObject);
     holderElem.appendChild(deleteButton);
 
     return editor;
@@ -214,12 +237,17 @@ function onCreateSourceClick(ev) {
         _id: randomString(8),
         dbType: typeToCreate,
     };*/
-    createEditor("Create source: " + typeToCreate, defaultVal, schemas[typeToCreate]);
+    createEditor("Create source: " + typeToCreate, defaultVal, sourceSchemas[typeToCreate]);
     /*val = editor.getValue();
     val.type = "source";
     val._id = randomString(8);
     val.dbType = typeToCreate;
     editor.setValue(val);*/
+}
+
+function onCreateQueryClick(ev) {
+    var defaultVal = undefined;
+    createEditor("Create query", defaultVal, querySchema);
 }
 
 function createButton(id, cssClass, text, onClick) {
@@ -240,13 +268,20 @@ function main() {
         createEditor("Objects", docToEdit);
     } else {
         var buttonHolder = document.getElementById(buttonHolderId);
+        var createCssClass = "createButton btn";
+
+        // new query
+        var buttonQuery = createButton("queryCreate", createCssClass + " btn btn-primary", "Create Query", onCreateQueryClick);
+        buttonHolder.appendChild(buttonQuery);
+        
+        // new source
         for(var i = 0; i < dbTypesArray.length; i++) {
             var dbTypeName = dbTypesArray[i];
             
-            var createCssClass = "createButton";
             var button = createButton(dbTypeName, createCssClass, capitalizeFirstLetter(dbTypeName), onCreateSourceClick);
             buttonHolder.appendChild(button);
         }
+        
     }
 }
 
