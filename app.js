@@ -124,6 +124,9 @@ app.use(function(req, res, next) {
 // Development error handler
 // Shows stack traces
 app.use(function(err, req, res, next) {
+    console.error(err);
+    console.error(err.stack);
+
     res.status(err.status || 500);
     res.render('error', {
         message: err.message,

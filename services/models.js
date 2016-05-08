@@ -21,10 +21,13 @@ var siteDB = new nedb({
     autoload: true
 });
 
+
+/*
+No need to be unique - we'll always have id and slug
 siteDB.ensureIndex({ fieldName: 'slug', unique: true }, function (err) {
     if(err)
         console.error("Failed to set unique constraint");
-});
+});*/
 
 
 var modelTypes = {
@@ -34,8 +37,8 @@ var modelTypes = {
 }
 var modelTypesArray = Object.keys(modelTypes);
 
-function newObj(doc) {
-    siteDB.insert(doc, function(err, newDoc) {
+function newObj(doc, callback) {
+    siteDB.insert(doc, callback || function(err, newDoc) {
         if(err)
             console.log("Failed inserting doc: " + err);
     });
@@ -165,7 +168,8 @@ exports.updateObj = function(doc, callback) {
     var options = {
         upsert: true
     }
-    siteDB.update({_id: doc._id}, doc, options, function(err, numAffected, affectedDocuments, upsert) {
+    var query = {_id: doc._id};
+    siteDB.update(query, doc, options, function(err, numAffected, affectedDocuments, upsert) {
         if(err)
             console.warn("Failed updating doc: " + err);
         callback(err, numAffected);
@@ -204,3 +208,4 @@ function main() {
 main();
 
 exports.modelTypesArray = modelTypesArray;
+exports.newObj = newObj;

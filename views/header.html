@@ -24,8 +24,9 @@
     <a id="title" href="/">{{ title }}</a>
     <span id="menu">
         {{#user}}
-            <a href="/edit">New Object</a>
-            <span id="logon">
+            <a class="menuPageLink" href="/">Home</a>
+            <a class="menuPageLink" href="/edit">New Object</a>
+            <span class="menuPageLink" id="logon">
                 {{.}} (<a href='/logout'>logout</a>)
             </span>
         {{/user}}

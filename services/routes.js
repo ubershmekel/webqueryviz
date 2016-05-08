@@ -79,11 +79,13 @@ router.post('/sendtoken', requestTokenMiddleware, onTokenSent);
 ///////////////////////////////////////////////////////////////////////////////
 // Create read update delete
 ///////////////////////////////////////////////////////////////////////////////
-router.get('/edit/:id?/:slug?', passwordless.restricted(), function(req, res) {
+var editUrlFormat = '/edit/:id?/:slug?';
+router.get(editUrlFormat, passwordless.restricted(), function(req, res) {
+    var docId = req.params.id;
     models.getEverything( function(err, docs) {
         var templateData = {
             title: "Edit Objects",
-            editObjectId: req.params.id,
+            editObjectId: docId,
             err: err,
             docs: JSON.stringify(docs),
             dbTypesArray: JSON.stringify(dbTypesArray),
@@ -93,20 +95,29 @@ router.get('/edit/:id?/:slug?', passwordless.restricted(), function(req, res) {
     });
 });
 
-router.post('/edit', passwordless.restricted(), function(req, res) {
-    var newDocs = req.body;
-
-    var ids = [];
-    for(var i = 0; i < newDocs.length; i++) {
-        models.updateObj(newDocs[i], function(err, newDoc){
-        }); 
-        ids.push(newDocs[i]._id);
+router.post(editUrlFormat, passwordless.restricted(), function(req, res) {
+    var doc = req.body;
+    var docId = req.params.id;
+    if(!doc.type || !docId) {
+        res.status(400);
+        res.json({error: "invalid type or id"});
+        return;
     }
     
-    models.deleteOtherIds(ids, function(err, numRemoved) {
-    });
-    
-    res.status(200);
+    function cb(err, newDoc) {
+        if(err) {
+            console.warn(err);
+            res.status(500);
+        } else {
+            res.json(newDoc);
+        }
+    }
+    console.log(doc);
+    if(docId) {
+        models.updateObj(doc, cb);
+    } else {
+        models.newObj(doc, cb);
+    } 
 });
 
 ///////////////////////////////////////////////////////////////////////////////
