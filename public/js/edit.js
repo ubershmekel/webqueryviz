@@ -413,7 +413,7 @@ function onCreateQueryClick(ev) {
         type: "query",
         _id: randomString(8),
     };
-    createEditor("Create query", defaultVal, querySchema);
+    createEditor("Create query", defaultVal, schemas.query);
 }
 
 function createButton(id, cssClass, text, onClick) {

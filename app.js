@@ -116,7 +116,7 @@ app.use('/', routes);
 
 /// catch 404 and forward to error handler
 app.use(function(req, res, next) {
-    var err = new Error('Not Found');
+    var err = new Error('Not Found: ' + req.originalUrl);
     err.status = 404;
     next(err);
 });
@@ -125,7 +125,9 @@ app.use(function(req, res, next) {
 // Shows stack traces
 app.use(function(err, req, res, next) {
     console.error(err);
-    console.error(err.stack);
+    
+    if(err.status !== 404)
+        console.error(err.stack);
 
     res.status(err.status || 500);
     res.render('error', {
