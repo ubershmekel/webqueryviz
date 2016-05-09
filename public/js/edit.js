@@ -137,6 +137,9 @@ function randomString(len, charSet) {
     return randomString;
 }
 
+// TODO: somehow make it obvious to the user what's a new viz and what's an existing one
+var vizId = randomString(8);
+
 function handleQueryData(err, docs) {
     if(err || !docs) {
         error("Failed to get query data:" + err);
@@ -175,6 +178,7 @@ function handleQueryData(err, docs) {
         headers: headers,
         rows: previewRows
     }
+    
     var rendered = Mustache.render(template, templateData);
     $('#tablePreview').html(rendered);
     
@@ -183,6 +187,19 @@ function handleQueryData(err, docs) {
     var xpropSelector = '.xpropSelector';
     var plotTypeSelector = '.plotTypeSelector';
     var gfilterTemplate = 'http://localhost:3000/gfilter/?dl=/query/{{queryId}}&type=json&viz={{vizType}}&xprop={{xprop}}';
+    
+    $('#publishViz').click(onPublishViz);
+    function onPublishViz(ev) {
+        var query = editor.getValue();
+        var vizDoc = {
+            _id: vizId,
+            type: "viz",
+            name: query.name,
+            queryId: query._id,
+            href: vizLink.attr('href'),
+        };
+        sendDocToSave(vizDoc);
+    }
     
     function onChangeRadio(ev) {
         var xpropSelected = $(xpropSelector + ':checked').val();
@@ -305,6 +322,27 @@ function onDeleteClick(mouseEvent) {
     humane.error("Not yet implemented");
 }
 
+function sendDocToSave(doc) {
+    var jsonNewDoc = JSON.stringify(doc);
+    var xhr = new XMLHttpRequest();
+    xhr.open("POST", "", true);
+    xhr.setRequestHeader("Content-Type", "application/json");
+    xhr.onload = function (e) {
+        if (xhr.readyState === 4) {
+            if (xhr.status === 200) {
+                //humane.log(xhr.responseText);
+                humane.log("Saved");
+            } else {
+                error(xhr.statusText + ' - ' + xhr.responseText);
+            }
+        }
+    };
+    xhr.onerror = function (e) {
+        error(xhr.statusText + ' ' + e);
+    };
+    xhr.send(jsonNewDoc);
+}
+
 function onSaveClick(mouseEvent) {
     // Validate
     function isValid() {
@@ -327,24 +365,7 @@ function onSaveClick(mouseEvent) {
     // TODO: make socketio safe
     var doc = editor.getValue();
     
-    var jsonNewDoc = JSON.stringify(doc);
-    var xhr = new XMLHttpRequest();
-    xhr.open("POST", "", true);
-    xhr.setRequestHeader("Content-Type", "application/json");
-    xhr.onload = function (e) {
-        if (xhr.readyState === 4) {
-            if (xhr.status === 200) {
-                //humane.log(xhr.responseText);
-                humane.log("Saved");
-            } else {
-                error(xhr.statusText + ' - ' + xhr.responseText);
-            }
-        }
-    };
-    xhr.onerror = function (e) {
-        error(xhr.statusText + ' ' + e);
-    };
-    xhr.send(jsonNewDoc);
+    sendDocToSave(doc);
 }
 
 function findCurrentDocToEdit(targetId, docsObject) {
