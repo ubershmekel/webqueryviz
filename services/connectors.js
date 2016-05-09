@@ -72,7 +72,7 @@ dbFetch[dbTypes.mysql] = function(sourceDoc, queryDoc, callback) {
 
     connection.query(query, function(err, rows, fields) {
         //console.log('The solution is: ', rows[0].solution);
-        calback(err, rows);
+        callback(err, rows);
     });
 
     connection.end();

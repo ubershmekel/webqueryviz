@@ -21,11 +21,20 @@
         <h2>Pick X-Axis</h2>
         {{#headers}}
             <label class="myRadio">
-                <input class="xpropSelector" type="radio" name="xprop" value="{{.}}">
+                <input class="xpropSelector" type="radio" name="xprop" value="{{.}}" />
                 {{.}}
             </label>
         {{/headers}}
         
+        <h2>Plot Type</h2>
+        {{#plotTypes}}
+            <label class="myRadio">
+                <input class="plotTypeSelector" type="radio" name="plotType" value="{{.}}" />
+                {{.}}
+            </label>
+        {{/plotTypes}}
+        
+        <h2>Plot Link</h2>
         <div>
             <a id="vizLink">Pick X-Axis and this becomes the link to your chart</a>
         </div>

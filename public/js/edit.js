@@ -49,12 +49,15 @@ var allProps = {
 };
 
 
+var schemas = {};
 var sourceSchemas = {};
+schemas.source = sourceSchemas;
 sourceSchemas.sqlite = {
     type: "object",
     properties: {
         name: allProps.name,
         filepath: allProps.filepath,
+        dbType: allProps.dbType,
     }
 };
 
@@ -65,17 +68,19 @@ sourceSchemas.mysql = {
         host: allProps.host,
         username: allProps.username,
         password: allProps.password,
-    }    
+        dbType: allProps.dbType,
+        database: allProps.database,
+    }
 };
 
 sourceSchemas.teradata = sourceSchemas.mysql;
 
-sourceSchemas.everything = {
+/*sourceSchemas.everything = {
     type: "object",
     headerTemplate: "{{ self.type }} - {{ self.name }}",
     defaultProperties: ["_id", "type", "name"],
     properties: allProps
-};
+};*/
 
 
 var sourceIdsArray = [];
@@ -85,18 +90,26 @@ docs.source.forEach(function(doc) {
     sourceNamesArray.push(doc.name + ' - ' + doc.dbType);
 });
 
-querySchema = {
+schemas.query = {
     type: "object",
     properties: {
         name: allProps.name,
         query: allProps.query,
-        sourceId: {
+        sourceName: {
             "type": "string",
             "enum": sourceNamesArray,
         },
     }
 };
 
+schemas.viz = {
+    type: "object",
+    properties: {
+        name: allProps.name,
+        queryId: { "type": "string" },
+        href: { "type": "string" },
+    }
+}
 
 // Initialize the editor
 var options = {
@@ -105,6 +118,7 @@ var options = {
     remove_empty_properties: false,
     disable_collapse: true,
     no_additional_properties: false,
+    required_by_default: true,
     show_errors: "always",
     theme: 'bootstrap3',
     iconlib: 'bootstrap3',
@@ -150,7 +164,14 @@ function handleQueryData(err, docs) {
     
     var template = $('#tableTemplate').html();
     Mustache.parse(template);   // optional, speeds up future uses
+    var plotTypes = ['plot', 'gfilter'];
+    
+    // Mustache makes this hard
+    plotTypes[0].first = true;
+    headers[0].first = true;
+    
     var templateData = {
+        plotTypes: plotTypes,
         headers: headers,
         rows: previewRows
     }
@@ -160,32 +181,51 @@ function handleQueryData(err, docs) {
     var vizLink = $('#vizLink');
     
     var xpropSelector = '.xpropSelector';
-    var gfilterTemplate = 'http://localhost:3000/gfilter/?dl=/query/{{queryId}}&type=json&viz=plot&xprop={{xprop}}';
-    $(xpropSelector).change(function(ev) {
+    var plotTypeSelector = '.plotTypeSelector';
+    var gfilterTemplate = 'http://localhost:3000/gfilter/?dl=/query/{{queryId}}&type=json&viz={{vizType}}&xprop={{xprop}}';
+    
+    function onChangeRadio(ev) {
         var xpropSelected = $(xpropSelector + ':checked').val();
-        var href = 'javascript:void(0);';
+        var plotTypeSelected = $(plotTypeSelector + ':checked').val();
         if(xpropSelected) {
             var queryId = editor.getValue()._id;
             var gfilterTemplateData = {
                 queryId: queryId,
-                xprop: xpropSelected
+                xprop: xpropSelected,
+                vizType: plotTypeSelected,
             };
-            href = Mustache.render(gfilterTemplate, gfilterTemplateData);
+            var href = Mustache.render(gfilterTemplate, gfilterTemplateData);
             vizLink.attr("href", href);
         } else {
             vizLink.removeAttr("href");
         }
-        
-    });
+    }
+    
+    // default first radio button 
+    var propsJq = $(xpropSelector);
+    propsJq.first().prop("checked", true);
+    $(plotTypeSelector).first().prop("checked", true);
+    
+    // set default link
+    onChangeRadio();
+    
+    $('.myRadio').change(onChangeRadio);
 }
 
 function onPreviewClick(ev) {
     //var id = editor.getValue('root._id');
     var doc = editor.getValue();
-    if(doc)
+    if(doc) {
+        var sourceIndex = sourceNamesArray.indexOf(doc.sourceName);
+        if(sourceIndex === -1) {
+            error("Source name unidentified");
+            return;
+        }
+        doc.sourceId = sourceIdsArray[sourceIndex];
         socket.emit('getQueryDataFromDoc', doc, handleQueryData);
-    else
+    } else {
         error('Preview requires an id not: "' + id + '"');
+    }
 }
 
 function queryEditorSetup(editor) {
@@ -197,11 +237,25 @@ function queryEditorSetup(editor) {
     editor.element.appendChild(button);
 }
 
-function createEditor(title, data, schema) {
-    if(schema)
+function createEditor(title, defaultVal, schema) {
+    if(schema) {
         options.schema = schema;
-    else
-        options.schema = sourceSchemas.everything;
+    } else {
+        // TODO: make this shared code with the server and data driven
+        switch(defaultVal.type) {
+            case "query":
+                options.schema = schemas.query;
+            break;
+            case "source":
+                options.schema = sourceSchemas[defaultVal.dbType];
+            break;
+            case "viz":
+                options.schema = schemas.viz;
+            break;
+            default:
+                error("Unknown object type: " + defaultVal.type);
+        }
+    }
     options.schema.title = title;
     var holderId = "editorContainer";
     var holderElem = document.getElementById(holderId);
@@ -209,8 +263,11 @@ function createEditor(title, data, schema) {
 
     editor = new JSONEditor(holderElem, options);
     // Set the value
-    if(data)
-        editor.setValue(data);
+    if(defaultVal) {
+        var orig = editor.getValue();
+        $.extend(orig, defaultVal);
+        editor.setValue(orig);
+    }
 
     // Hide the things users should not modify
     //editor.getEditor('root._id').disable();
@@ -225,6 +282,11 @@ function createEditor(title, data, schema) {
     var edElem = editor.getEditor('root.password');
     if(edElem)
         edElem.container.setAttribute("title", "Passwords are stored as plain text on the server - beware")
+    
+    // Disable fields
+    var edElem2 = editor.getEditor('root.dbType');
+    if(edElem2)
+        edElem2.disable();
     
     // Buttons
     var saveButton = createButton("save", "btn btn-primary", "Save", onSaveClick);
@@ -250,6 +312,7 @@ function onSaveClick(mouseEvent) {
         if(errors.length) {
             // Not valid
             //error(errors);
+            console.warn(errors);
             return false;
         }
         return true;
@@ -263,6 +326,7 @@ function onSaveClick(mouseEvent) {
     
     // TODO: make socketio safe
     var doc = editor.getValue();
+    
     var jsonNewDoc = JSON.stringify(doc);
     var xhr = new XMLHttpRequest();
     xhr.open("POST", "", true);
@@ -273,7 +337,7 @@ function onSaveClick(mouseEvent) {
                 //humane.log(xhr.responseText);
                 humane.log("Saved");
             } else {
-                error(xhr.statusText);
+                error(xhr.statusText + ' - ' + xhr.responseText);
             }
         }
     };
@@ -310,12 +374,11 @@ function onCreateSourceClick(ev) {
     var el = ev.target;
     var typeToCreate = el.id;
     console.log(typeToCreate);
-    var defaultVal = undefined;
-    /*var defaultVal = {
+    var defaultVal = {
         type: "source",
         _id: randomString(8),
         dbType: typeToCreate,
-    };*/
+    };
     createEditor("Create source: " + typeToCreate, defaultVal, sourceSchemas[typeToCreate]);
     /*val = editor.getValue();
     val.type = "source";
@@ -325,7 +388,10 @@ function onCreateSourceClick(ev) {
 }
 
 function onCreateQueryClick(ev) {
-    var defaultVal = undefined;
+    var defaultVal = {
+        type: "query",
+        _id: randomString(8),
+    };
     createEditor("Create query", defaultVal, querySchema);
 }
 
@@ -343,6 +409,7 @@ function main() {
     var buttonHolderId = "newButtons";
     if(editObjectId) {
         var docToEdit = null;
+        // editObjectId is provided in edit.html
         docToEdit = findCurrentDocToEdit(editObjectId, docs);
         createEditor("Objects", docToEdit);
     } else {

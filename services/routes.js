@@ -97,8 +97,7 @@ router.get(editUrlFormat, passwordless.restricted(), function(req, res) {
 
 router.post(editUrlFormat, passwordless.restricted(), function(req, res) {
     var doc = req.body;
-    var docId = req.params.id;
-    if(!doc.type || !docId) {
+    if(!doc.type || !doc._id) {
         res.status(400);
         res.json({error: "invalid type or id"});
         return;
@@ -113,11 +112,11 @@ router.post(editUrlFormat, passwordless.restricted(), function(req, res) {
         }
     }
     console.log(doc);
-    if(docId) {
-        models.updateObj(doc, cb);
-    } else {
+    //if(doc._id) {
+    models.updateObj(doc, cb);
+    /*} else {
         models.newObj(doc, cb);
-    } 
+    } */
 });
 
 ///////////////////////////////////////////////////////////////////////////////

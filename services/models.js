@@ -77,7 +77,7 @@ exports.getQueryDataFromDoc = function(queryDoc, callback) {
 
     siteDB.find(sourceToFind, function (err, sourcesList) {
         if(err || !sourcesList || sourcesList.length === 0) {
-            console.warn("Failed getting source: '" + queryDoc.sourceId + "' with error: " + err);
+            console.warn("Failed getting source doc: '" + queryDoc.sourceId + "' with error: " + err);
             callback(err);
             return;
         }
